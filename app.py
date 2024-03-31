@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
+import openai
 
 app = Flask(__name__)
 CORS(app)
@@ -481,6 +482,10 @@ def delete_user(user_id):
 
     finally:
         cursor.close()
+
+
+# OPEN AI TO GENERATE VALUES FOR ACTIVITIES
+@app.route('/api/openai', methods=['POST'])
 
 
 
