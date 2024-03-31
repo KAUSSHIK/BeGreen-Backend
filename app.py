@@ -269,29 +269,6 @@ def leaderboard_weekly(user_id):
         })
     return jsonify({'leaderboard': leaderboard_data})
 
-
-# Update the user's points
-@app.route('/api/update/points/<user_id>/<points>', methods=['POST'])
-def update_points(user_id, points):
-    points = int(points)
-    cursor = mysql.connection.cursor()
-    # Check if the user exists:
-    cursor.execute("""
-        SELECT * FROM user WHERE user_id = %s
-    """, (user_id,))
-    user = cursor.fetchone()
-    if not user:
-        return jsonify({'message': 'not found'})
-    else:
-        cursor.execute("""
-            UPDATE user
-            SET points = points + %s
-            WHERE user_id = %s
-        """, (points, user_id))
-        mysql.connection.commit()
-        cursor.close()
-
-        return jsonify({'message': 'success'})
     
 # Update the user's points, daily_score, and weekly_score
 @app.route('/api/update/points/<user_id>/<points>', methods=['POST'])
