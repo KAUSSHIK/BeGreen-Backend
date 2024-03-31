@@ -292,6 +292,31 @@ def update_points(user_id, points):
         cursor.close()
 
         return jsonify({'message': 'success'})
+    
+# Update the user's points, daily_score, and weekly_score
+@app.route('/api/update/points/<user_id>/<points>', methods=['POST'])
+def update_points(user_id, points):
+    points = int(points)
+    cursor = mysql.connection.cursor()
+    # Check if the user exists:
+    cursor.execute("""
+        SELECT * FROM user WHERE user_id = %s
+    """, (user_id,))
+    user = cursor.fetchone()
+    if not user:
+        return jsonify({'message': 'not found'})
+    else:
+        cursor.execute("""
+            UPDATE user
+            SET points = points + %s,
+                daily_score = daily_score + %s,
+                weekly_score = weekly_score + %s
+            WHERE user_id = %s
+        """, (points, points, points, user_id))
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify({'message': 'success'})
 
 # Update the user's daily score
 @app.route('/api/update/daily_score/<user_id>/<daily_score>', methods=['POST'])
@@ -589,7 +614,9 @@ def reset_weekly_score():
     return jsonify({'message': 'success'})
 
 
-# Predict the sustainability points for an activity using OPEN AI
+
+
+# Predict the sustainability points for an activity using OPEN AI - AI FEATURE (working prototype, needs a LOT MORE DATA but some results are promising)
 @app.route('/api/predict-points', methods=['POST'])
 def predict_points():
     activity = request.json['activity']
