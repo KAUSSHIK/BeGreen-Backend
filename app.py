@@ -18,6 +18,8 @@ app.config['MYSQL_DB'] = os.getenv('DB_NAME')
 
 mysql = MySQL(app)
 
+
+
 # Check if we can connect to the database
 @app.route('/api/check', methods=['GET'])
 def check():
@@ -486,8 +488,15 @@ def delete_user(user_id):
 
 # OPEN AI TO GENERATE VALUES FOR ACTIVITIES
 @app.route('/api/openai', methods=['POST'])
-
-
+def openai_api():
+    data = request.get_json()
+    prompt = data['prompt']
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=100
+    )
+    return jsonify({'response': response.choices[0].text})
 
 
 # Main Function
