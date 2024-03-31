@@ -454,6 +454,34 @@ def set_profile_picture(user_id, profile_picture):
     return jsonify({'message': 'success'})
 
 
+# Delete a user
+@app.route('/api/delete/user/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    cursor = mysql.connection.cursor()
+
+    try:
+        # Delete the user's friendships from the friends table
+        cursor.execute("""
+            DELETE FROM friends
+            WHERE user_id = %s OR friend_id = %s
+        """, (user_id, user_id))
+
+        # Delete the user from the user table
+        cursor.execute("""
+            DELETE FROM user
+            WHERE user_id = %s
+        """, (user_id,))
+
+        mysql.connection.commit()
+        return jsonify({'message': 'success'})
+
+    except Exception as e:
+        mysql.connection.rollback()
+        return jsonify({'message': 'error', 'error': str(e)}), 500
+
+    finally:
+        cursor.close()
+
 
 
 
