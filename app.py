@@ -492,6 +492,7 @@ def delete_user(user_id):
         cursor.close()
 
 
+# IF ONE OF THSE IS THROWING 503 - CHECK IF USER_ID EXISTS IN THE DATABASE FIRST
 # Add a badge/assign a badge to a user
 @app.route('/api/badges/add/<badge_id>/<user_id>', methods=['POST'])
 def add_badge(badge_id, user_id):
@@ -560,7 +561,6 @@ def delete_badge(badge_id, user_id):
 
     finally:
         cursor.close()
-
 
 
 # Predict the sustainability points for an activity using OPEN AI
