@@ -3,7 +3,7 @@ from flask_mysqldb import MySQL
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
-import openai
+from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +19,7 @@ app.config['MYSQL_DB'] = os.getenv('DB_NAME')
 mysql = MySQL(app)
 
 # Load the OpenAI API Key
-openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=os.getenv('OPEN_AI_API_KEY'))
 
 # Open the file to get the fine-tuned model ID
 with open("fine_tuned_model_id.txt", "r") as file:
@@ -497,8 +497,8 @@ def predict_points():
     activity = request.json['activity']
 
     # Use the fine-tuned model for predictions
-    response = openai.Completion.create(
-        engine=fine_tuned_model_id,
+    response = client.completions.create(
+        model=fine_tuned_model_id,
         prompt=f"Predict the sustainability points for the following activity: {activity}",
         max_tokens=17,
         n=1,

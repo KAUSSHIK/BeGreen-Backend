@@ -1,11 +1,20 @@
 # this file is for training the OPEN AI MODEL
 import os
-import openai
+from openai import OpenAI
 import json
+from dotenv import load_dotenv
 
+load_dotenv()
 
-# Set the OpenAI API Key
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Initialize OpenAI client with the API Key
+client = OpenAI(api_key=os.getenv('OPEN_AI_API_KEY'))
+
+# Get the absolute path to the dataset.txt file
+dataset_file_path = os.path.abspath('dataset.txt')
+
+training_file = client.files.create(
+    file=open("dataset.jsonl", "rb"), purpose="fine-tune"
+)
 
 
 # Load activities from a JSON file
@@ -23,16 +32,31 @@ for activity, points in ACTIVITIES.items():
     example = f"{prompt}\t{points}"
     dataset.append(example)
 
-# Fine Tune the Model
-response = openai.FineTune.create_training(
-    model="text-davinci-002",                 # Model to fine-tune
-    data=dataset,                             # Training data
-    name="sustainability_points_predictor"    # Name for the fine-tuned model
+# # Write the dataset to a file
+# with open('dataset.txt', 'w') as f:
+#     for item in dataset:
+#         data = {
+#             "prompt": item.split('\t')[0],
+#             "completion": "You get" + item.split('\t')[1] + " sustainability points."
+#         }
+#         f.write(json.dumps(data) + "\n")
+    
+with open('dataset.jsonl', 'w') as f:
+    for example in dataset:
+        json.dump({"prompt": example.split('\t')[0], "completion": "You get " + example.split('\t')[1] + " sustainability points."}, f)
+        f.write('\n')  # Newline between each JSON object
+
+  
+response = client.fine_tuning.jobs.create(
+    training_file=training_file.id,  # Pass the JSONL file
+    model="davinci-002",
+    suffix="sust-points"
 )
 
-# Retrieve the fine-tuned model
-fine_tuned_model_id = response['model']
+print(response)
+# # Retrieve the fine-tuned model ID
+# fine_tuned_model_id = response
 
-# Save the fine-tuned model ID to a text file
-with open("fine_tuned_model_id.txt", "w") as file:
-    file.write(fine_tuned_model_id)
+# # Save the fine-tuned model ID to a text file
+# with open("fine_tuned_model_id.txt", "w") as file:
+#     file.write(fine_tuned_model_id)
