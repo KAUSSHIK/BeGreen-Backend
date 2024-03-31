@@ -491,6 +491,78 @@ def delete_user(user_id):
     finally:
         cursor.close()
 
+
+# Add a badge/assign a badge to a user
+@app.route('/api/badges/add/<badge_id>/<user_id>', methods=['POST'])
+def add_badge(badge_id, user_id):
+    cursor = mysql.connection.cursor()
+
+    # Check if the badge already exists
+    cursor.execute("""
+        SELECT * FROM badge WHERE user_id = %s AND badge_id = %s
+    """, (user_id, badge_id))
+    existing_badge = cursor.fetchone()
+    if existing_badge:
+        return jsonify({'message': 'already exists'})
+
+    # If not, add the badge
+    cursor.execute("""
+        INSERT INTO badge (user_id, badge_id)
+        VALUES (%s, %s)
+    """, (user_id, badge_id))
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({'message': 'success'})
+
+# Get the user's badges
+@app.route('/api/badges/<user_id>', methods=['GET'])
+def get_badges(user_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        SELECT b.badge_id
+        FROM badge b
+        INNER JOIN user u ON u.user_id = b.user_id
+        WHERE u.user_id = %s
+    """, (user_id,))
+    badges = cursor.fetchall()
+    cursor.close()
+
+    if not badges:
+        return jsonify({'badges': []})
+    
+    badges_data = []
+    for badge in badges:
+        badges_data.append({
+            'badge_id': badge[0],
+        })
+
+    return jsonify({'badges': badges_data})
+
+# Delete the user's badge
+@app.route('/api/badges/delete/<badge_id>/<user_id>', methods=['DELETE'])
+def delete_badge(badge_id, user_id):
+    cursor = mysql.connection.cursor()
+
+    try:
+        # Delete the badge from the badge table
+        cursor.execute("""
+            DELETE FROM badge
+            WHERE user_id = %s AND badge_id = %s
+        """, (user_id, badge_id))
+
+        mysql.connection.commit()
+        return jsonify({'message': 'success'})
+
+    except Exception as e:
+        mysql.connection.rollback()
+        return jsonify({'message': 'error', 'error': str(e)}), 500
+
+    finally:
+        cursor.close()
+
+
+
 # Predict the sustainability points for an activity using OPEN AI
 @app.route('/api/predict-points', methods=['POST'])
 def predict_points():
@@ -508,6 +580,8 @@ def predict_points():
     predicted_points = response.choices[0].text.strip()
 
     return jsonify({'predicted_points': predicted_points})
+
+
 
 
 # Main Function
