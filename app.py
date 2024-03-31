@@ -160,8 +160,10 @@ def login():
 def leaderboard(user_id):
     cursor = mysql.connection.cursor()
     cursor.execute("""
-        SELECT COUNT(*) FROM friends WHERE user_id = %s OR friend_id = %s
-    """, (user_id, user_id))
+        SELECT COUNT(DISTINCT CASE WHEN user_id = %s THEN friend_id ELSE user_id END)
+        FROM friends
+        WHERE user_id = %s OR friend_id = %s
+    """, (user_id, user_id, user_id))
     friends_count = cursor.fetchone()[0]
 
     if friends_count < 3:
@@ -172,7 +174,7 @@ def leaderboard(user_id):
         limit = 10
 
     cursor.execute("""
-        SELECT u.user_id, u.name, u.profile_picture, u.points
+        SELECT DISTINCT u.user_id, u.name, u.profile_picture, u.points
         FROM user u
         INNER JOIN friends f ON (u.user_id = f.friend_id OR u.user_id = f.user_id)
         WHERE (f.user_id = %s OR f.friend_id = %s)
@@ -184,14 +186,14 @@ def leaderboard(user_id):
 
     if not leaderboard:
         return jsonify({'leaderboard': []})
-    
+
     leaderboard_data = []
-    for friends in leaderboard:
+    for friend in leaderboard:
         leaderboard_data.append({
-            'user_id': friends[0],
-            'name': friends[1],
-            'profile_picture': friends[2],
-            'points': friends[3]
+            'user_id': friend[0],
+            'name': friend[1],
+            'profile_picture': friend[2],
+            'points': friend[3]
         })
 
     return jsonify({'leaderboard': leaderboard_data})
