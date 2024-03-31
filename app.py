@@ -200,39 +200,47 @@ def leaderboard(user_id):
 
 
 # Leaderboard for the user: Get the top 3/5/10 users depending on the amount of friends the user has DAILY_SCORE
-@app.route('/api/leaderboard/daily/<user_id>', methods=['GET'])
-def leaderboard_daily(user_id):
+@app.route('/api/leaderboard/<user_id>', methods=['GET'])
+def leaderboard(user_id):
     cursor = mysql.connection.cursor()
     cursor.execute("""
-        SELECT COUNT(*) FROM friends WHERE user_id = %s OR friend_id = %s
-    """, (user_id, user_id))
+        SELECT COUNT(DISTINCT CASE WHEN user_id = %s THEN friend_id ELSE user_id END)
+        FROM friends
+        WHERE user_id = %s OR friend_id = %s
+    """, (user_id, user_id, user_id))
     friends_count = cursor.fetchone()[0]
+
     if friends_count < 3:
         limit = 3
     elif friends_count < 5:
         limit = 5
     else:
         limit = 10
+
     cursor.execute("""
-        SELECT u.user_id, u.name, u.profile_picture, u.daily_score
+        SELECT u.user_id, u.name, u.profile_picture, u.points
         FROM user u
-        INNER JOIN friends f ON (u.user_id = f.friend_id OR u.user_id = f.user_id)
-        WHERE (f.user_id = %s OR f.friend_id = %s) AND u.user_id != %s
-        ORDER BY u.daily_score DESC
+        LEFT JOIN friends f ON (u.user_id = f.friend_id OR u.user_id = f.user_id)
+        WHERE u.user_id = %s OR (f.user_id = %s OR f.friend_id = %s)
+        GROUP BY u.user_id
+        ORDER BY u.points DESC
         LIMIT %s
     """, (user_id, user_id, user_id, limit))
     leaderboard = cursor.fetchall()
     cursor.close()
+
     if not leaderboard:
         return jsonify({'leaderboard': []})
+
     leaderboard_data = []
-    for friends in leaderboard:
+    for friend in leaderboard:
         leaderboard_data.append({
-            'user_id': friends[0],
-            'name': friends[1],
-            'profile_picture': friends[2],
-            'daily_score': friends[3]
+            'user_id': friend[0],
+            'name': friend[1],
+            'profile_picture': friend[2],
+            'points': friend[3]
         })
+
     return jsonify({'leaderboard': leaderboard_data})
 
 # Leaderboard for the user: Get the top 3/5/10 users depending on the amount of friends the user has WEEKLY_SCORE
