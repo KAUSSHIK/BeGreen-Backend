@@ -1,13 +1,27 @@
 # this file is for training the OPEN AI MODEL
 import os
 import openai
+import json
 
 
 #Set the OpenAI API Key
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-#Load Dataset
+
+# Load activities from a JSON file
+with open('activities.json', 'r') as f:
+    activities_data = json.load(f)
+
+# Convert Activities to a dictionary
+ACTIVITIES = activities_data['activities']
+
+# Initialise Dataset
 dataset = []
+
+for activity, points in ACTIVITIES.items():
+    prompt = f"How many sustainability points do I get for {activity}?"
+    example = f"{prompt}\t{points}"
+    dataset.append(example)
 
 fine_tuned_model = None
 

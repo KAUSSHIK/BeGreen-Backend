@@ -18,6 +18,12 @@ app.config['MYSQL_DB'] = os.getenv('DB_NAME')
 
 mysql = MySQL(app)
 
+# Load the OpenAI API Key
+openai.api_key = os.getenv('OPENAI_API_KEY')
+
+# Open the file to get the fine-tuned model ID
+with open("fine_tuned_model_id.txt", "r") as file:
+    fine_tuned_model_id = file.read().strip()
 
 
 # Check if we can connect to the database
@@ -485,18 +491,23 @@ def delete_user(user_id):
     finally:
         cursor.close()
 
+# Predict the sustainability points for an activity using OPEN AI
+@app.route('/api/predict-points', methods=['POST'])
+def predict_points():
+    activity = request.json['activity']
 
-# OPEN AI TO GENERATE VALUES FOR ACTIVITIES
-@app.route('/api/openai', methods=['POST'])
-def openai_api():
-    data = request.get_json()
-    prompt = data['prompt']
+    # Use the fine-tuned model for predictions
     response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        max_tokens=100
+        engine=fine_tuned_model_id,
+        prompt=f"Predict the sustainability points for the following activity: {activity}",
+        max_tokens=17,
+        n=1,
+        stop=None,
+        temperature=0.7,
     )
-    return jsonify({'response': response.choices[0].text})
+    predicted_points = response.choices[0].text.strip()
+
+    return jsonify({'predicted_points': predicted_points})
 
 
 # Main Function
