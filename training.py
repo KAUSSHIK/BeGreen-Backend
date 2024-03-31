@@ -4,7 +4,7 @@ import openai
 import json
 
 
-#Set the OpenAI API Key
+# Set the OpenAI API Key
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
@@ -15,7 +15,7 @@ with open('activities.json', 'r') as f:
 # Convert Activities to a dictionary
 ACTIVITIES = activities_data['activities']
 
-# Initialise Dataset
+# Initialize Dataset
 dataset = []
 
 for activity, points in ACTIVITIES.items():
@@ -23,20 +23,16 @@ for activity, points in ACTIVITIES.items():
     example = f"{prompt}\t{points}"
     dataset.append(example)
 
-fine_tuned_model = None
-
 # Fine Tune the Model
-
-response = openai.FineTune.create(
-    model = "text-davinci-002",                 # Model to fine-tune
-    training_file = dataset,                    # Training data
-    suffix = "sustainability_points_predictor", # Suffix to add to the model name
+response = openai.FineTune.create_training(
+    model="text-davinci-002",                 # Model to fine-tune
+    data=dataset,                             # Training data
+    name="sustainability_points_predictor"    # Name for the fine-tuned model
 )
 
 # Retrieve the fine-tuned model
-fine_tuned_model_id = response.fine_tuned_model
+fine_tuned_model_id = response['model']
 
-# Save the fine-tuned model as a variable in a text file
-with open ("fine_tuned_model_id.txt", "w") as file:
+# Save the fine-tuned model ID to a text file
+with open("fine_tuned_model_id.txt", "w") as file:
     file.write(fine_tuned_model_id)
-
