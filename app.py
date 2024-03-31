@@ -562,6 +562,32 @@ def delete_badge(badge_id, user_id):
     finally:
         cursor.close()
 
+# Set the all users' daily score to zero upon request
+@app.route('/api/reset/daily_score', methods=['POST'])
+def reset_daily_score():
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        UPDATE user
+        SET daily_score = 0
+    """)
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({'message': 'success'})
+
+# Set the all users' weekly score to zero upon request
+@app.route('/api/reset/weekly_score', methods=['POST'])
+def reset_weekly_score():
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        UPDATE user
+        SET weekly_score = 0
+    """)
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({'message': 'success'})
+
 
 # Predict the sustainability points for an activity using OPEN AI
 @app.route('/api/predict-points', methods=['POST'])
