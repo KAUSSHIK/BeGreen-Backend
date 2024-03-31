@@ -492,7 +492,7 @@ def delete_user(user_id):
         cursor.close()
 
 
-# IF ONE OF THSE IS THROWING 503 - CHECK IF USER_ID EXISTS IN THE DATABASE FIRST
+# IF ONE OF THSE IS THROWING 503 - CHECK IF USER_ID EXISTS IN THE DATABASE FIRST, THEN PROCEED
 # Add a badge/assign a badge to a user
 @app.route('/api/badges/add/<badge_id>/<user_id>', methods=['POST'])
 def add_badge(badge_id, user_id):
