@@ -175,10 +175,10 @@ def leaderboard(user_id):
         SELECT u.user_id, u.name, u.profile_picture, u.points
         FROM user u
         INNER JOIN friends f ON (u.user_id = f.friend_id OR u.user_id = f.user_id)
-        WHERE (f.user_id = %s OR f.friend_id = %s) AND u.user_id != %s
+        WHERE (f.user_id = %s OR f.friend_id = %s)
         ORDER BY u.points DESC
         LIMIT %s
-    """, (user_id, user_id, user_id, limit))
+    """, (user_id, user_id, limit))
     leaderboard = cursor.fetchall()
     cursor.close()
 
