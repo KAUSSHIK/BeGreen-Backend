@@ -556,6 +556,126 @@ def predict_points():
 
     return jsonify({'predicted_points': predicted_points})
 
+# ACTIVITIES TABLE:
+# CREATE TABLE activities (
+#     id INT AUTO_INCREMENT PRIMARY KEY,
+#     user_id VARCHAR(50),
+#     activity_name VARCHAR(100),
+#     activity_count INT DEFAULT 1,
+#     FOREIGN KEY (user_id) REFERENCES user(user_id)
+# );
+
+# BADGE TABLE:
+# CREATE TABLE badge (
+#   user_id VARCHAR(50),
+#   badge_id INT,
+#   PRIMARY KEY (user_id, badge_id),
+#   FOREIGN KEY (user_id) REFERENCES user(user_id)
+# );
+
+# Getters and Setters for the activities table
+# Add an activity
+@app.route('/api/activities/add/<user_id>/<activity_name>', methods=['POST'])
+def add_activity(user_id, activity_name):
+    cursor = mysql.connection.cursor()
+
+    # Check if the activity already exists
+    cursor.execute("""
+        SELECT * FROM activities WHERE user_id = %s AND activity_name = %s
+    """, (user_id, activity_name))
+    existing_activity = cursor.fetchone()
+    if existing_activity:
+        cursor.execute("""
+            UPDATE activities
+            SET activity_count = activity_count + 1
+            WHERE user_id = %s AND activity_name = %s
+        """, (user_id, activity_name))
+        mysql.connection.commit()
+        cursor.close()
+        return jsonify({'message': 'success'})
+
+    # If not, add the activity
+    cursor.execute("""
+        INSERT INTO activities (user_id, activity_name)
+        VALUES (%s, %s)
+    """, (user_id, activity_name))
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({'message': 'success'})
+
+# Get the user's activities
+@app.route('/api/activities/<user_id>', methods=['GET'])
+def get_activities(user_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        SELECT activity_name, activity_count
+        FROM activities
+        WHERE user_id = %s ORDER BY activities.id DESC
+    """, (user_id,))
+    activities = cursor.fetchall()
+    cursor.close()
+
+    if not activities:
+        return jsonify({'activities': []})
+    
+    activities_data = []
+    for activity in activities:
+        activities_data.append({
+            'activity_name': activity[0],
+            'activity_count': activity[1]
+        })
+
+    return jsonify({'activities': activities_data})
+
+# ADD BADGE
+@app.route('/api/badges/add/<badge_id>/<user_id>', methods=['POST'])
+def add_badge(badge_id, user_id):
+    cursor = mysql.connection.cursor()
+
+    # Check if the badge already exists
+    cursor.execute("""
+        SELECT * FROM badge WHERE user_id = %s AND badge_id = %s
+    """, (user_id, badge_id))
+    existing_badge = cursor.fetchone()
+    if existing_badge:
+        return jsonify({'message': 'already exists'})
+
+    # If not, add the badge
+    cursor.execute("""
+        INSERT INTO badge (user_id, badge_id)
+        VALUES (%s, %s)
+    """, (user_id, badge_id))
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({'message': 'success'})
+
+# Get the user's badges
+@app.route('/api/badges/<user_id>', methods=['GET'])
+def get_badges(user_id):
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+        SELECT b.badge_id
+        FROM badge b
+        INNER JOIN user u ON u.user_id = b.user_id
+        WHERE u.user_id = %s
+    """, (user_id,))
+    badges = cursor.fetchall()
+    cursor.close()
+
+    if not badges:
+        return jsonify({'badges': []})
+    
+    badges_data = []
+    for badge in badges:
+        badges_data.append({
+            'badge_id': badge[0],
+        })
+
+    return jsonify({'badges': badges_data})
+
+
 
 
 
