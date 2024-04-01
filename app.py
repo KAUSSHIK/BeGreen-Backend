@@ -611,7 +611,7 @@ def get_activities(user_id):
     cursor.execute("""
         SELECT activity_name, activity_count
         FROM activities
-        WHERE user_id = %s ORDER BY activities.id DESC
+        WHERE user_id = %s ORDER BY id DESC
     """, (user_id,))
     activities = cursor.fetchall()
     cursor.close()
@@ -627,56 +627,6 @@ def get_activities(user_id):
         })
 
     return jsonify({'activities': activities_data})
-
-# ADD BADGE
-@app.route('/api/badges/add/<badge_id>/<user_id>', methods=['POST'])
-def add_badge(badge_id, user_id):
-    cursor = mysql.connection.cursor()
-
-    # Check if the badge already exists
-    cursor.execute("""
-        SELECT * FROM badge WHERE user_id = %s AND badge_id = %s
-    """, (user_id, badge_id))
-    existing_badge = cursor.fetchone()
-    if existing_badge:
-        return jsonify({'message': 'already exists'})
-
-    # If not, add the badge
-    cursor.execute("""
-        INSERT INTO badge (user_id, badge_id)
-        VALUES (%s, %s)
-    """, (user_id, badge_id))
-    mysql.connection.commit()
-    cursor.close()
-
-    return jsonify({'message': 'success'})
-
-# Get the user's badges
-@app.route('/api/badges/<user_id>', methods=['GET'])
-def get_badges(user_id):
-    cursor = mysql.connection.cursor()
-    cursor.execute("""
-        SELECT b.badge_id
-        FROM badge b
-        INNER JOIN user u ON u.user_id = b.user_id
-        WHERE u.user_id = %s
-    """, (user_id,))
-    badges = cursor.fetchall()
-    cursor.close()
-
-    if not badges:
-        return jsonify({'badges': []})
-    
-    badges_data = []
-    for badge in badges:
-        badges_data.append({
-            'badge_id': badge[0],
-        })
-
-    return jsonify({'badges': badges_data})
-
-
-
 
 
 # Main Function
