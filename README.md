@@ -1,4 +1,4 @@
-##BeGreen: Empowering Sustainability, One Task at a Time
+## BeGreen: Empowering Sustainability, One Task at a Time
 
 **Inspiration**
 
